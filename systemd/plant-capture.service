@@ -1,0 +1,14 @@
+[Unit]
+Description=Plant Monitor capture loop
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/plant-monitor/capture.py
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+[Unit]
+Description=Plant Monitor daily pipeline (analyze, alerts, timelapse, dashboard)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c '/usr/bin/python3 /home/pi/plant-monitor/analyze.py && /usr/bin/python3 /home/pi/plant-monitor/alerts.py && /usr/bin/python3 /home/pi/plant-monitor/timelapse.py && /usr/bin/python3 /home/pi/plant-monitor/dashboard.py'

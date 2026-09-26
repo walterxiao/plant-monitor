@@ -1,0 +1,38 @@
+# Plant Monitor configuration — edit to match your setup
+plant_name: "Basil"
+
+camera:
+  resolution: [2592, 1944]   # Pi Camera Module 3 sweet spot (quality vs disk)
+  interval_minutes: 10        # ~84 photos/day over 14h of daylight ≈ 150 MB/day
+  jpeg_quality: 90
+
+lighting:
+  mode: "outdoor"             # "outdoor" = sunrise/sunset, "indoor" = fixed hours
+  latitude: 38.9089           # Vienna, VA — set yours
+  longitude: -77.2489
+  indoor_start: "07:00"       # only used when mode: indoor
+  indoor_end: "21:00"
+
+paths:
+  data_dir: "data"             # relative to project root, or absolute
+
+analysis:
+  min_brightness: 40          # frames dimmer than this are skipped (lights off)
+  green_hsv_low: [35, 40, 40]
+  green_hsv_high: [85, 255, 255]
+  yellow_hsv_low: [20, 40, 40]
+  yellow_hsv_high: [35, 255, 255]
+
+alerts:
+  ntfy_topic: ""              # e.g. "plant-alerts-ab12cd" for phone push via ntfy.sh; "" = log only
+  calibration_days: 3         # no growth alerts until this many days of baseline
+  wilt_green_drop_pct: 15     # green_ratio drop vs 3-day median
+  wilt_height_drop_pct: 10    # plant height drop vs 3-day median
+  yellow_spike_ratio: 0.05    # yellow_ratio jump above baseline
+  stall_days: 7               # days with <2% area change before "stalled" alert
+  remind_after_days: 3        # re-alert an ongoing condition after this long
+
+timelapse:
+  fps: 30
+  overlay_size: [1280, 720]
+  keep_overlay_frames: false  # true = keep rendered frames (debugging; uses disk)

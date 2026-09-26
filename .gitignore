@@ -1,0 +1,6 @@
+# runtime data — photos, metrics, videos, dashboard output
+data/
+# python
+__pycache__/
+*.pyc
+.venv/
