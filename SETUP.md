@@ -183,7 +183,13 @@ The settings you care about:
 - `lighting` — your `latitude`/`longitude` so daytime is computed from
   real sunrise/sunset (or switch `mode` to `indoor` with fixed hours if
   you use a grow light).
-- `camera.interval_minutes` — photo every 10 minutes is a good default.
+- `camera.interval_minutes` — how often a photo is taken. The default is
+  `10` (every 10 minutes), which gives a smooth timelapse and a detailed
+  growth curve. **If you'd rather it wakes up less often — say every 6
+  hours — set this to `360`.** Fewer photos = less storage and a
+  lazier timelapse, but it's still plenty for tracking growth and health.
+  (With `lighting: outdoor`, only daylight hours count, so every 6 hours
+  is roughly 2 photos a day.)
 - `alerts.ntfy_topic` — optional. Set a random topic name (e.g.
   `my-plant-xyz123`), install the free **ntfy** app on your phone,
   subscribe to that topic, and the Pi will text you when something's
@@ -345,3 +351,27 @@ sudo systemctl restart plant-capture.service
 This downloads the latest version of our code and restarts the
 Photographer with it. That's it — your plant robot is a low-maintenance
 pet. 🌿
+
+## Changing settings later (e.g. photo frequency)
+
+Nothing here is permanent — change any setting anytime:
+
+1. SSH into the Pi, then open the settings:
+   ```bash
+   nano ~/plant-monitor/config.yaml
+   ```
+2. Change what you want. For example, to take a photo every 6 hours
+   instead of every 10 minutes, change
+   `interval_minutes: 10` → `interval_minutes: 360`.
+3. Save (Ctrl+O, Enter) and exit (Ctrl+X).
+4. Restart the Photographer so it picks up the change:
+   ```bash
+   sudo systemctl restart plant-capture.service
+   ```
+
+   That's it — the new rhythm starts immediately. (Settings read only by
+   the night crew, like `alerts`, take effect at the next 22:30 run with
+   no restart needed.)
+
+Common intervals: `10` = every 10 min (default), `60` = hourly,
+`360` = every 6 hours, `1440` = once a day.
