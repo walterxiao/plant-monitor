@@ -31,6 +31,15 @@ pixel changes, so bumping the camera looks like "growth."
 4. Write to the microSD card, insert it into the Pi, and power on. Give it
    1–2 minutes to boot and join Wi-Fi.
 
+> **Do I need to connect the Pi to a network?** Not strictly — photo
+> capture, analysis, timelapse, and the dashboard all work offline. But
+> it's strongly recommended, because the Pi has no battery-backed clock:
+> without network, its time resets on every reboot (breaking photo
+> timestamps, sunrise/sunset math, and alert timing). Wi-Fi also enables
+> phone push alerts and viewing the dashboard from your Mac. If you ever
+> run it fully offline, add a DS3231 real-time-clock module (~$5) and set
+> the time manually.
+
 ## 3. Connect to the Pi from your Mac
 
 Everything below happens in **Terminal** on your Mac
