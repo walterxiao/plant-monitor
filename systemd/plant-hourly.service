@@ -1,0 +1,12 @@
+[Unit]
+Description=Plant Monitor hourly refresh (analyze -> timelapse -> dashboard)
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c '/usr/bin/python3 /home/pi/plant-monitor/analyze.py && /usr/bin/python3 /home/pi/plant-monitor/timelapse.py && /usr/bin/python3 /home/pi/plant-monitor/dashboard.py'
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

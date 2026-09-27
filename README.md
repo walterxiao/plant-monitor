@@ -65,7 +65,9 @@ The first 3 days are calibration — no growth alerts until there's a baseline.
 
 ## Viewing
 
-- **Dashboard**: `python3 -m http.server 8000 --directory data/dashboard`,
+- **Dashboard**: `python3 -m http.server 8000 --directory data`,
+  then open http://localhost:8000/dashboard/
+  (serve from `data/` so the page's `../videos/` links resolve),
   then open `http://<pi-ip>:8000` — latest photo, growth charts, alerts, videos.
 - **Videos**: `data/videos/growth-timelapse.mp4` (full run) plus one per day.
   Frames carry the date, day number, live metrics, and a growth sparkline.

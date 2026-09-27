@@ -1,0 +1,14 @@
+[Unit]
+Description=Plant Monitor dashboard web server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m http.server 8000 --directory /home/pi/plant-monitor/data
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

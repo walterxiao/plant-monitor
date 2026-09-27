@@ -35,12 +35,17 @@ And two concepts you'll meet below:
 
 ## 1. Assemble the hardware
 
-1. **Connect the camera to the Pi.** On the Pi board, find the port labeled
-   `CAMERA` (it's the small slot between the HDMI ports and the audio
-   jack). Gently pull up the black latch on the port — it slides up about
-   2mm. Slide the camera's ribbon cable straight in with the **blue side
-   facing the Ethernet port** (the big network jack). Push the latch back
-   down to lock it. The cable should feel snug, not loose.
+1. **Connect the camera to the Pi.** On the Pi 5 there are two identical
+   flat slots near the HDMI ports, labeled `CAM/DISP0` and `CAM/DISP1`.
+   Use **`CAM/DISP1`** — the one nearer the USB-C/HDMI side. (Either slot
+   works physically, but the software config below targets `CAM/DISP1`.)
+   Gently pull up the latch on the slot — it slides up about 2mm. Slide
+   the camera's ribbon cable straight in with the **shiny metal contacts
+   facing the Ethernet jack** (the big network jack) — blue side faces
+   *away* from it. (Note: this is flipped vs older Pi models.) Push the
+   latch back down to lock it. The cable should feel snug, not loose.
+   > ArduCam IMX708 users: this module also needs two lines in
+   > `/boot/firmware/config.txt` before the Pi will see it — see step 4.
 2. **Put the Pi in its case** per the kit's little instruction sheet, and
    plug in the fan if it isn't pre-installed.
 3. **Position it** so the camera faces the plant, about 30–60 cm (1–2 feet)
@@ -156,6 +161,13 @@ mentioning `imx708`. If it says no cameras were found, the ribbon cable
 isn't seated right: shut the Pi down (`sudo shutdown now`), unplug power,
 and redo step 1's cable seating.
 
+> **ArduCam IMX708 module?** It needs a config change before detection
+> works. Run `sudo nano /boot/firmware/config.txt`, change
+> `camera_auto_detect=1` to `camera_auto_detect=0`, add a line
+> `dtoverlay=imx708` (use `dtoverlay=imx708,cam0` only if you plugged
+> into `CAM/DISP0`), save (Ctrl+O, Enter, Ctrl+X), then
+> `sudo reboot` and re-run the check.
+
 ## 5. Install the plant-monitor software (on the Pi)
 
 ```bash
@@ -201,7 +213,7 @@ Save (Ctrl+O, Enter) and exit (Ctrl+X).
 
 ```bash
 cd ~/plant-monitor
-./venv/bin/python -c "
+python3 -c "
 from picamera2 import Picamera2
 cam = Picamera2()
 cam.start()
@@ -228,7 +240,7 @@ so it has something to compare against. Take a few test photos first (or
 wait a day), then:
 
 ```bash
-cd ~/plant-monitor && ./venv/bin/python analyze.py
+cd ~/plant-monitor && python3 analyze.py
 ```
 
 Do this while the plant looks healthy. If it's already struggling, help it
@@ -272,10 +284,10 @@ Impatient? Run the night crew manually right now:
 
 ```bash
 cd ~/plant-monitor
-./venv/bin/python analyze.py
-./venv/bin/python alerts.py
-./venv/bin/python timelapse.py
-./venv/bin/python dashboard.py
+python3 analyze.py
+python3 alerts.py
+python3 timelapse.py
+python3 dashboard.py
 ```
 
 ## 11. See your dashboard (on your Mac)
@@ -284,7 +296,9 @@ Pick whichever is easier:
 
 - **Over the network** (nothing to copy): on the Pi, run
   ```bash
-  cd ~/plant-monitor/data/dashboard && python3 -m http.server 8000
+  cd ~/plant-monitor/data && python3 -m http.server 8000
+  # then open http://localhost:8000/dashboard/
+  # (serve from data/, not data/dashboard — the page links ../videos/)
   ```
   then open **`http://plantpi.local:8000`** in Safari or Chrome on your
   Mac. (Back on the Pi, press Ctrl+C to stop the little web server.)

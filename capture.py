@@ -73,7 +73,9 @@ def main() -> None:
                     day_dir.mkdir(parents=True, exist_ok=True)
                     path = day_dir / (now.strftime("%H%M%S") + ".jpg")
                     # full-quality still (separate from the preview array)
-                    picam.capture_file(str(path), quality=quality)
+                    # NOTE: capture_file() takes no quality kwarg on current
+                    # picamera2 — default JPEG quality is used.
+                    picam.capture_file(str(path))
                     print(f"captured {path} (brightness {brightness:.0f})",
                           flush=True)
                 else:
