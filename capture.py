@@ -53,6 +53,14 @@ def main() -> None:
     w, h = cfg["camera"]["resolution"]
     picam.configure(picam.create_still_configuration(main={"size": (w, h)}))
     picam.start()
+    # Continuous autofocus (if the camera hardware supports it). Without this,
+    # the lens stays at its power-on position and close-up shots stay soft.
+    try:
+        from libcamera import controls
+        picam.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+        print("autofocus: continuous enabled", flush=True)
+    except Exception as e:
+        print(f"autofocus: not available ({e})", flush=True)
     time.sleep(2)  # sensor warmup / auto-exposure settle
 
     data_dir = resolve_data_dir(cfg)

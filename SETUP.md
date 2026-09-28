@@ -343,6 +343,12 @@ Each alert fires once, then waits 3 days before reminding you again.
 - **Photos are black** — the Pi thinks it's night. Check the
   `lighting` section of `config.yaml` (wrong coordinates?), or switch to
   `mode: indoor`.
+- **Photos are blurry** — check the lens for a fingerprint or the clear
+  protective film it ships with (easy to miss — peel it off). If the
+  camera is in a case, make sure nothing touches the lens barrel: the
+  autofocus motor physically moves the lens, and a tight case jams it,
+  so the lens opening needs clearance. The capture script turns on
+  continuous autofocus automatically when the hardware supports it.
 - **A service won't start** — read its diary:
   `sudo journalctl -u plant-capture.service -e` (use `-u plant-daily`
   for the night crew). The last lines usually say exactly what's wrong.

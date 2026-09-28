@@ -1,13 +1,13 @@
-# Plant Monitor configuration — edit to match your setup
-plant_name: "Basil"
+# Plant Monitor configuration — Walter's live settings for Bob (indoor)
+plant_name: "Bob"
 
 camera:
   resolution: [2592, 1944]   # Pi Camera Module 3 sweet spot (quality vs disk)
-  interval_minutes: 10        # ~84 photos/day over 14h of daylight ≈ 150 MB/day
+  interval_minutes: 30        # ~28 photos/day over 14h of indoor light
   jpeg_quality: 90
 
 lighting:
-  mode: "outdoor"             # "outdoor" = sunrise/sunset, "indoor" = fixed hours
+  mode: "indoor"             # "outdoor" = sunrise/sunset, "indoor" = fixed hours
   latitude: 38.9089           # Vienna, VA — set yours
   longitude: -77.2489
   indoor_start: "07:00"       # only used when mode: indoor
@@ -17,7 +17,7 @@ paths:
   data_dir: "data"             # relative to project root, or absolute
 
 analysis:
-  min_brightness: 40          # frames dimmer than this are skipped (lights off)
+  min_brightness: 20          # frames dimmer than this are skipped (lights off)
   green_hsv_low: [35, 40, 40]
   green_hsv_high: [85, 255, 255]
   yellow_hsv_low: [20, 40, 40]
