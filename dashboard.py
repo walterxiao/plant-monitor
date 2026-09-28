@@ -148,7 +148,8 @@ def main() -> None:
         latest = max((data_dir / "photos").rglob("*.jpg"),
                      key=lambda p: p.stat().st_mtime)
         shutil.copy(latest, dash / "latest.jpg")
-        latest_img = '<img src="latest.jpg" style="max-width:100%">'
+        v = int(now.timestamp())
+        latest_img = f'<img src="latest.jpg?v={v}" style="max-width:100%">'
 
         # charts
         times = [r["_dt"] for r in rows]
@@ -164,7 +165,7 @@ def main() -> None:
         fig.tight_layout()
         fig.savefig(dash / "growth.png", dpi=90)
         plt.close(fig)
-        chart_html = '<img src="growth.png" style="max-width:100%">'
+        chart_html = f'<img src="growth.png?v={v}" style="max-width:100%">'
 
         first = rows[0]["green_ratio"] or 1e-9
         growth = (rows[-1]["green_ratio"] - rows[0]["green_ratio"]) / first * 100
