@@ -7,11 +7,14 @@ Renders data/dashboard/index.html with:
   - current stats (days tracked, growth since day 1)
   - recent alerts
   - links to daily + full timelapse videos
+  - last/next refresh timestamps + a manual "Refresh now" button
+    (the button needs serve.py — plain http.server can't run refreshes)
 Regenerate after analyze/alerts/timelapse run.
 """
 import json
 import shutil
-from datetime import datetime
+import subprocess
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import matplotlib
@@ -43,12 +46,99 @@ def load_rows(data_dir: Path) -> list[dict]:
     return sorted(rows, key=lambda r: r["_dt"])
 
 
+def hourly_timer_active() -> bool:
+    """True if the hourly refresh timer is running on this machine."""
+    try:
+        r = subprocess.run(["systemctl", "is-active", "plant-hourly.timer"],
+                           capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() == "active"
+    except Exception:
+        return False
+
+
+def write_status(data_dir: Path, **updates) -> dict:
+    """Read-modify-write data/refresh_status.json.
+
+    Never clobbers keys managed by serve.py (e.g. refresh_in_progress).
+    """
+    path = data_dir / "refresh_status.json"
+    status: dict = {}
+    if path.exists():
+        try:
+            status = json.loads(path.read_text())
+        except Exception:
+            status = {}
+    status.setdefault("refresh_in_progress", False)
+    status.update(updates)
+    path.write_text(json.dumps(status))
+    return status
+
+
+def fmt_time(dt: datetime) -> str:
+    return dt.strftime("%b %-d, %Y %-I:%M %p")
+
+
+def refresh_section(now: datetime) -> str:
+    """HTML block: last/next refresh timestamps + manual refresh button."""
+    if hourly_timer_active():
+        next_run = (now.replace(minute=0, second=0, microsecond=0)
+                    + timedelta(hours=1))
+        next_html = f"Next refresh: <b>{fmt_time(next_run)}</b> (hourly)"
+    else:
+        next_html = ("Next refresh: <b>not scheduled</b> — install the hourly "
+                     "timer or use the Refresh button below")
+    return f"""
+<h2>Refresh</h2>
+<p>Last refresh: <b>{fmt_time(now)}</b><br>{next_html}</p>
+<p><button id="refreshBtn" onclick="manualRefresh()"
+style="font-size:16px;padding:8px 16px;cursor:pointer">↻ Refresh now</button>
+<span id="refreshMsg" style="margin-left:8px;color:#555"></span></p>
+<script>
+const pageRefresh = "{now.isoformat(timespec='seconds')}";
+async function manualRefresh() {{
+  const btn = document.getElementById('refreshBtn');
+  const msg = document.getElementById('refreshMsg');
+  btn.disabled = true;
+  msg.textContent = 'Starting refresh…';
+  const t0 = Date.now();
+  try {{
+    const r = await fetch('/api/refresh', {{method: 'POST'}});
+    if (r.status === 409) {{
+      msg.textContent = 'A refresh is already running — waiting for it to finish…';
+    }}
+  }} catch (e) {{
+    msg.textContent = 'Could not reach the refresh server.';
+    btn.disabled = false;
+    return;
+  }}
+  const poll = setInterval(async () => {{
+    try {{
+      const s = await (await fetch('/refresh_status.json', {{cache: 'no-store'}})).json();
+      if (!s.refresh_in_progress && s.last_refresh && s.last_refresh !== pageRefresh) {{
+        clearInterval(poll);
+        msg.textContent = 'Done — reloading…';
+        location.reload();
+      }} else if (!s.refresh_in_progress && s.last_error) {{
+        clearInterval(poll);
+        msg.textContent = 'Refresh failed — check the Pi and try again.';
+        btn.disabled = false;
+      }} else {{
+        msg.textContent = 'Refreshing… ' + Math.round((Date.now() - t0) / 1000) + 's';
+      }}
+    }} catch (e) {{ /* status file not written yet — keep waiting */ }}
+  }}, 5000);
+}}
+</script>"""
+
+
 def main() -> None:
     cfg = load_config()
     data_dir = resolve_data_dir(cfg)
     dash = data_dir / "dashboard"
     dash.mkdir(parents=True, exist_ok=True)
     rows = load_rows(data_dir)
+    now = datetime.now()
+    write_status(data_dir, last_refresh=now.isoformat(timespec="seconds"))
 
     latest_img = ""
     stats_html = "<p>No photos yet — the capture loop hasn't run.</p>"
@@ -117,12 +207,12 @@ def main() -> None:
 <title>{cfg['plant_name']} — Plant Monitor</title></head>
 <body style="font-family:sans-serif;max-width:900px;margin:auto;padding:16px">
 <h1>🌱 {cfg['plant_name']}</h1>
+{refresh_section(now)}
 <h2>Latest</h2>{latest_img}
 <h2>Stats</h2>{stats_html}
 <h2>Growth</h2>{chart_html}
 <h2>Alerts</h2>{alerts_html}
 <h2>Timelapses</h2>{vids_html}
-<p style="color:#888">Generated {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
 </body></html>""")
     print(f"dashboard: {dash / 'index.html'}", flush=True)
 

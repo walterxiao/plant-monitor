@@ -296,9 +296,10 @@ Pick whichever is easier:
 
 - **Over the network** (nothing to copy): on the Pi, run
   ```bash
-  cd ~/plant-monitor/data && python3 -m http.server 8000
+  cd ~/plant-monitor && python3 serve.py
   # then open http://localhost:8000/dashboard/
-  # (serve from data/, not data/dashboard — the page links ../videos/)
+  # (serves data/ — the page links ../videos/ — and enables the
+  # dashboard's "Refresh now" button via POST /api/refresh)
   ```
   then open **`http://plantpi.local:8000`** in Safari or Chrome on your
   Mac. (Back on the Pi, press Ctrl+C to stop the little web server.)

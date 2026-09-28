@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 -m http.server 8000 --directory /home/pi/plant-monitor/data
+ExecStart=/usr/bin/python3 /home/pi/plant-monitor/serve.py
 Restart=always
 RestartSec=30
 StandardOutput=journal
