@@ -151,17 +151,24 @@ def main() -> None:
         v = int(now.timestamp())
         latest_img = f'<img src="latest.jpg?v={v}" style="max-width:100%">'
 
-        # charts
+        # charts — x-axis is photo sequence, so stretches with no captures
+        # (e.g. nighttime) are compressed out instead of showing dead space
         times = [r["_dt"] for r in rows]
+        xs = list(range(len(rows)))
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-        ax1.plot(times, [r["green_ratio"] * 100 for r in rows], color="green")
+        ax1.plot(xs, [r["green_ratio"] * 100 for r in rows], color="green")
         ax1.set_ylabel("green % of frame")
         ax1.set_title(f"{cfg['plant_name']} — growth")
         ax1.grid(alpha=0.3)
-        ax2.plot(times, [r["height_px"] for r in rows], color="darkgreen")
+        ax2.plot(xs, [r["height_px"] for r in rows], color="darkgreen")
         ax2.set_ylabel("height (px)")
-        ax2.set_xlabel("time")
+        ax2.set_xlabel("captured photo (gaps with no photos skipped)")
         ax2.grid(alpha=0.3)
+        step = max(1, len(rows) // 10)
+        tick_idx = list(range(0, len(rows), step))
+        ax2.set_xticks(tick_idx)
+        ax2.set_xticklabels([times[i].strftime("%m-%d %H:%M")
+                             for i in tick_idx], rotation=30, ha="right")
         fig.tight_layout()
         fig.savefig(dash / "growth.png", dpi=90)
         plt.close(fig)
