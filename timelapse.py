@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Plant Monitor — timelapse video builder.
 
-For each day with photos, renders overlay frames with PIL (date, day
-number, live growth metrics, and a mini growth-curve sparkline drawn
-from the metrics history), then encodes with ffmpeg. Also concatenates
-all daily videos into one full growth-timelapse.mp4.
+Renders overlay frames with PIL (date, day number, live growth metrics,
+and a mini growth-curve sparkline drawn from the metrics history) for
+every photo, then encodes a single end-to-end growth-timelapse.mp4
+with ffmpeg.
 
-Idempotent: days that already have a video are skipped unless their
-photo count changed.
+Idempotent: skipped unless the photo count changed since the last build.
 """
 import json
 import shutil
@@ -86,24 +85,20 @@ def draw_sparkline(draw: ImageDraw.ImageDraw, history: list[tuple[str, float]],
                  fill=(120, 255, 120))
 
 
-def render_day(day: str, photos: list[Path], cfg: dict, data_dir: Path,
-               metrics: dict[str, dict],
-               history: list[tuple[str, float]]) -> Path:
+def render_all(all_photos: list[tuple[str, Path]], first_day: str, cfg: dict,
+               data_dir: Path, metrics: dict[str, dict],
+               history: list[tuple[str, float]], frames_dir: Path) -> Path:
+    """Render overlay frames for every photo (all days), sequentially numbered."""
     tw, th = cfg["timelapse"]["overlay_size"]
-    frames_dir = data_dir / "frames" / day
-    frames_dir.mkdir(parents=True, exist_ok=True)
     font_big = ImageFont.load_default(size=44)
     font_sm = ImageFont.load_default(size=28)
+    first_dt = datetime.strptime(first_day, "%Y-%m-%d")
 
-    first_day = min(p.name for p in
-                    (data_dir / "photos").iterdir() if p.is_dir())
-    day_num = (datetime.strptime(day, "%Y-%m-%d")
-               - datetime.strptime(first_day, "%Y-%m-%d")).days + 1
-
-    for i, photo in enumerate(photos):
+    for i, (day, photo) in enumerate(all_photos):
         img = cover_resize(Image.open(photo).convert("RGB"), (tw, th)).convert("RGBA")
         overlay = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
         d = ImageDraw.Draw(overlay)
+        day_num = (datetime.strptime(day, "%Y-%m-%d") - first_dt).days + 1
         # top bar
         d.rectangle([0, 0, tw, 110], fill=(0, 0, 0, 130))
         d.text((24, 14), f"{cfg['plant_name']} - day {day_num} - {day}",
@@ -147,38 +142,34 @@ def main() -> None:
     history = daily_green_history(data_dir)
     fps = cfg["timelapse"]["fps"]
     manifest = data_dir / "videos_manifest.json"
-    done: dict[str, int] = json.loads(manifest.read_text()) if manifest.exists() else {}
+    done: dict = json.loads(manifest.read_text()) if manifest.exists() else {}
 
-    built: list[Path] = []
+    # every photo across all days, oldest -> newest
+    all_photos: list[tuple[str, Path]] = []
     for day_dir in sorted(p for p in photos_root.iterdir() if p.is_dir()):
-        day = day_dir.name
-        photos = sorted(day_dir.glob("*.jpg"))
-        if not photos:
-            continue
-        out = videos_dir / f"{day}.mp4"
-        if done.get(day) == len(photos) and out.exists():
-            built.append(out)
-            continue
-        frames_dir = render_day(day, photos, cfg, data_dir, metrics, history)
-        encode(frames_dir, out, fps)
-        if not cfg["timelapse"]["keep_overlay_frames"]:
-            shutil.rmtree(frames_dir, ignore_errors=True)
-        done[day] = len(photos)
-        built.append(out)
-        print(f"timelapse: {day} -> {out} ({len(photos)} frames)", flush=True)
-    manifest.write_text(json.dumps(done, indent=2))
+        for photo in sorted(day_dir.glob("*.jpg")):
+            all_photos.append((day_dir.name, photo))
+    if not all_photos:
+        print("timelapse: no photos yet", flush=True)
+        return
 
-    # full growth video: concat daily segments
-    if built:
-        concat_list = videos_dir / "concat.txt"
-        concat_list.write_text("".join(f"file '{p.name}'\n" for p in built))
-        full = videos_dir / "growth-timelapse.mp4"
-        subprocess.run(
-            ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
-             "-i", str(concat_list), "-c", "copy", str(full)],
-            check=True, capture_output=True,
-        )
-        print(f"timelapse: full video -> {full}", flush=True)
+    full = videos_dir / "growth-timelapse.mp4"
+    if done.get("full") == len(all_photos) and full.exists():
+        print(f"timelapse: full video up to date ({len(all_photos)} frames)",
+              flush=True)
+        return
+
+    first_day = min(day for day, _ in all_photos)
+    frames_dir = data_dir / "frames" / "full"
+    frames_dir.mkdir(parents=True, exist_ok=True)
+    for f in frames_dir.glob("*.jpg"):  # clear stale frames from shorter runs
+        f.unlink()
+    render_all(all_photos, first_day, cfg, data_dir, metrics, history, frames_dir)
+    encode(frames_dir, full, fps)
+    if not cfg["timelapse"]["keep_overlay_frames"]:
+        shutil.rmtree(frames_dir, ignore_errors=True)
+    manifest.write_text(json.dumps({"full": len(all_photos)}, indent=2))
+    print(f"timelapse: full video -> {full} ({len(all_photos)} frames)", flush=True)
 
 
 if __name__ == "__main__":

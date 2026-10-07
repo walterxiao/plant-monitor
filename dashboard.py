@@ -6,7 +6,7 @@ Renders data/dashboard/index.html with:
   - growth charts (green % and plant height over time)
   - current stats (days tracked, growth since day 1)
   - recent alerts
-  - links to daily + full timelapse videos
+  - links to the timelapse video
   - last/next refresh timestamps + a manual "Refresh now" button
     (the button needs serve.py — plain http.server can't run refreshes)
 Regenerate after analyze/alerts/timelapse run.

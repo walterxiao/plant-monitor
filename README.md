@@ -13,9 +13,9 @@ camera ──▶ capture.py ──▶ photos/YYYY-MM-DD/*.jpg
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
           alerts.py      timelapse.py    dashboard.py
-          (wilting,       (daily + full   (charts, latest
-           yellowing,     growth videos   photo, alerts)
-           stalled)
+          (wilting,      (one end-to-    (charts, latest
+           yellowing,     end growth      photo, alerts)
+           stalled)      video)
 ```
 
 ## Hardware
@@ -95,7 +95,7 @@ alerts, timelapse, and dashboard keep working unchanged.
 | `capture.py` | daylight-gated capture loop with dark-frame skip |
 | `analyze.py` | per-photo CV metrics → `metrics.jsonl` |
 | `alerts.py` | rule engine → `alerts.jsonl` + ntfy push |
-| `timelapse.py` | PIL overlay frames + ffmpeg daily/full videos |
+| `timelapse.py` | PIL overlay frames + one end-to-end ffmpeg growth video |
 | `dashboard.py` | static HTML dashboard with growth charts |
 | `config.yaml` | all tunables in one place |
 | `install.sh` | one-shot Pi setup + systemd registration |
