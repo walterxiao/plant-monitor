@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+User=pi
 ExecStart=/usr/bin/python3 /home/pi/plant-monitor/capture.py
 Restart=always
 RestartSec=30

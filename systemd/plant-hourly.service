@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=oneshot
+User=pi
 ExecStart=/bin/bash -c '/usr/bin/python3 /home/pi/plant-monitor/analyze.py && /usr/bin/python3 /home/pi/plant-monitor/timelapse.py && /usr/bin/python3 /home/pi/plant-monitor/dashboard.py'
 StandardOutput=journal
 StandardError=journal

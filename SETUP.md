@@ -254,6 +254,7 @@ makes sure our program is always running:
 
 ```bash
 sudo cp systemd/plant-capture.service /etc/systemd/system/
+sudo sed -i -e "s|/home/pi/plant-monitor|$(pwd)|g" -e "s|^User=pi|User=$(whoami)|" /etc/systemd/system/plant-capture.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now plant-capture.service
 ```
@@ -276,6 +277,7 @@ timelapse video, and rebuild the web page:
 
 ```bash
 sudo cp systemd/plant-daily.service systemd/plant-daily.timer /etc/systemd/system/
+sudo sed -i -e "s|/home/pi/plant-monitor|$(pwd)|g" -e "s|^User=pi|User=$(whoami)|" /etc/systemd/system/plant-daily.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now plant-daily.timer
 ```

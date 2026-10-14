@@ -8,8 +8,8 @@ sudo apt update
 sudo apt install -y ffmpeg python3-pip python3-picamera2
 
 echo "== python packages =="
-# NB: installed with sudo so the root-run systemd services can import them
-# (a user-level pip install lands in ~/.local, invisible to root).
+# NB: installed with sudo so the packages land in the system site-packages,
+# importable no matter which user the systemd services run as.
 sudo pip3 install --break-system-packages -q \
   opencv-python numpy pyyaml astral matplotlib pillow
 
@@ -22,7 +22,8 @@ sudo cp systemd/plant-capture.service systemd/plant-daily.service \
         systemd/plant-hourly.service systemd/plant-hourly.timer \
         /etc/systemd/system/
 # point the units at this checkout
-sudo sed -i "s|/home/pi/plant-monitor|$(pwd)|g" \
+sudo sed -i -e "s|/home/pi/plant-monitor|$(pwd)|g" \
+            -e "s|^User=pi|User=$(whoami)|" \
   /etc/systemd/system/plant-capture.service \
   /etc/systemd/system/plant-daily.service \
   /etc/systemd/system/plant-dashboard.service \
