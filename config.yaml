@@ -18,6 +18,9 @@ paths:
 
 analysis:
   min_brightness: 20          # frames dimmer than this are skipped (lights off)
+  center_fraction: 0.5        # analyze only the center of the frame (0.5 = middle
+                              # half of width and height, where the pot sits);
+                              # 1.0 = whole frame
   green_hsv_low: [35, 40, 40]
   green_hsv_high: [85, 255, 255]
   yellow_hsv_low: [20, 40, 40]

@@ -11,6 +11,10 @@ For every new photo, computes:
 
 Appends one JSON line per photo to data/metrics.jsonl. Idempotent:
 already-processed files are skipped.
+
+Only the center of the frame is measured (analysis.center_fraction,
+default 0.5): the pot sits in the middle, and the edges are background
+(walls, floor, other objects) that only add noise to the metrics.
 """
 import json
 from datetime import datetime
@@ -43,8 +47,17 @@ def analyze_image(path: Path, cfg: dict) -> dict | None:
     img = cv2.imread(str(path))
     if img is None:
         return None
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     a = cfg["analysis"]
+
+    # center crop: measure only the middle of the frame, where the pot is
+    frac = float(a.get("center_fraction", 0.5))
+    if 0 < frac < 1:
+        h, w = img.shape[:2]
+        ch, cw = int(h * frac), int(w * frac)
+        y0, x0 = (h - ch) // 2, (w - cw) // 2
+        img = img[y0:y0 + ch, x0:x0 + cw]
+
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     green = cv2.inRange(hsv, np.array(a["green_hsv_low"]),
                         np.array(a["green_hsv_high"]))
